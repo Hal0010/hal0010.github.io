@@ -19,12 +19,12 @@
   <meta name="author" content="Hal Wong">
   <meta name="keywords" content="">
   
-    <meta name="description" content="条件概率、联合概率、边缘概率条件概率：在一个事件发生的情况下，另一个事件发生的概率$$P(B|A)&#x3D;\frac{P(A,B)}{P(B)}$$链式法则（递推公式）：$$P(X_1,X_2,X_3,,\cdots,,X_n)&#x3D;P(X_i)\prod^{n}_{j,j\neq i}P(X_j)$$ 联合概率：两个事件同时发生的概率，在数学上记为： $P(A,B)$ 边缘概率：多个事">
+    <meta name="description" content="条件概率、联合概率、边缘概率 条件概率： 在一个事件发生的情况下，另一个事件发生的概率 $$ P(B|A)&#x3D;\frac{P(A,B)}{P(B)} $$ 链式法则（递推公式）： $$ P(X_1,X_2,X_3,\,\cdots\,,X_n)&#x3D;P(X_i)\prod^{n}_{j,j\neq i}P(X_j) $$ ### 联合概率： 两个事件同时发生的概率，在数学上记为： P(A,">
 <meta property="og:type" content="article">
 <meta property="og:title" content="概率基础">
 <meta property="og:url" content="http://example.com/2025/07/06/%E6%A6%82%E7%8E%87%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="KEEP THINKING">
-<meta property="og:description" content="条件概率、联合概率、边缘概率条件概率：在一个事件发生的情况下，另一个事件发生的概率$$P(B|A)&#x3D;\frac{P(A,B)}{P(B)}$$链式法则（递推公式）：$$P(X_1,X_2,X_3,,\cdots,,X_n)&#x3D;P(X_i)\prod^{n}_{j,j\neq i}P(X_j)$$ 联合概率：两个事件同时发生的概率，在数学上记为： $P(A,B)$ 边缘概率：多个事">
+<meta property="og:description" content="条件概率、联合概率、边缘概率 条件概率： 在一个事件发生的情况下，另一个事件发生的概率 $$ P(B|A)&#x3D;\frac{P(A,B)}{P(B)} $$ 链式法则（递推公式）： $$ P(X_1,X_2,X_3,\,\cdots\,,X_n)&#x3D;P(X_i)\prod^{n}_{j,j\neq i}P(X_j) $$ ### 联合概率： 两个事件同时发生的概率，在数学上记为： P(A,">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-06T07:41:24.000Z">
 <meta property="article:modified_time" content="2025-07-06T07:42:53.082Z">
@@ -223,7 +223,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          223 字
+          219 字
         
       </span>
     
@@ -276,11 +276,21 @@
             
               <div class="markdown-body">
                 
-                <h2 id="条件概率、联合概率、边缘概率"><a href="#条件概率、联合概率、边缘概率" class="headerlink" title="条件概率、联合概率、边缘概率"></a>条件概率、联合概率、边缘概率</h2><h3 id="条件概率："><a href="#条件概率：" class="headerlink" title="条件概率："></a>条件概率：</h3><p>在一个事件发生的情况下，另一个事件发生的概率<br>$$<br>P(B|A)&#x3D;\frac{P(A,B)}{P(B)}<br>$$<br>链式法则（递推公式）：<br>$$<br>P(X_1,X_2,X_3,,\cdots,,X_n)&#x3D;P(X_i)\prod^{n}_{j,j\neq i}P(X_j)<br>$$</p>
-<h3 id="联合概率："><a href="#联合概率：" class="headerlink" title="联合概率："></a>联合概率：</h3><p>两个事件同时发生的概率，在数学上记为： $P(A,B)$</p>
-<h3 id="边缘概率："><a href="#边缘概率：" class="headerlink" title="边缘概率："></a>边缘概率：</h3><p>多个事件中某个事件发生的概率，即定义在子集上的概率分布，可由全概率公式计算：<br>$$<br>P(a)&#x3D;\sum_bP(a,,b)<br>$$<br>全概率公式说明了边缘概率和联合概率的关系，而条件概率则说明了联合概率和条件概率之间的关系</p>
-<h3 id="贝叶斯法则："><a href="#贝叶斯法则：" class="headerlink" title="贝叶斯法则："></a>贝叶斯法则：</h3><p> 贝叶斯法则反映了先验概率和后验概率之间的关系<br>$$<br> P(A|B)&#x3D;\frac{P(A)P(B|A)}{P(B)}<br>$$
- </p>
+                <h2 id="条件概率联合概率边缘概率">条件概率、联合概率、边缘概率</h2>
+<h3 id="条件概率">条件概率：</h3>
+<p>在一个事件发生的情况下，另一个事件发生的概率 <span class="math display">$$
+P(B|A)=\frac{P(A,B)}{P(B)}
+$$</span> 链式法则（递推公式）： <span class="math display">$$
+P(X_1,X_2,X_3,\,\cdots\,,X_n)=P(X_i)\prod^{n}_{j,j\neq i}P(X_j)
+$$</span> ### 联合概率： 两个事件同时发生的概率，在数学上记为： <span class="math inline"><em>P</em>(<em>A</em>, <em>B</em>)</span></p>
+<h3 id="边缘概率">边缘概率：</h3>
+<p>多个事件中某个事件发生的概率，即定义在子集上的概率分布，可由全概率公式计算：
+<span class="math display"><em>P</em>(<em>a</em>) = ∑<sub><em>b</em></sub><em>P</em>(<em>a</em> , <em>b</em>)</span>
+全概率公式说明了边缘概率和联合概率的关系，而条件概率则说明了联合概率和条件概率之间的关系</p>
+<h3 id="贝叶斯法则">贝叶斯法则：</h3>
+<p>贝叶斯法则反映了先验概率和后验概率之间的关系 <span class="math display">$$
+P(A|B)=\frac{P(A)P(B|A)}{P(B)}
+$$</span></p>
 
                 
               </div>
@@ -370,6 +380,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/07/06/Diffusion/" title="Diffusion">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Diffusion</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

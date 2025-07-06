@@ -229,6 +229,67 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
+        <a href="/2025/07/06/Diffusion/" target="_self">
+          Diffusion
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/06/Diffusion/" target="_self">
+        <div>
+          DDPM  加噪过程一步到位，去噪过程严格按照一步一步去噪，实现对噪声的预测，由于去噪过程需要一步一步进行，所以每次都要调用神经网络，导致生成较慢，所以考虑DDIM等加速生成的算法框架 加噪过程：前向过程被认为是马尔可夫过程，需要将数据分布逐步转换为噪声分布 $$ q(x_0,\ x_1,\ \dots\ ,x_T)=q(x_0)\prod^{T}_{i}q(x_t|x_{t-1})
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-06 16:02" pubdate>
+              2025-07-06
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%94%9F%E6%88%90%E5%BC%8F%E6%A8%A1%E5%9E%8B/" class="category-chain-item">生成式模型</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E7%94%9F%E6%88%90%E5%BC%8F%E6%A8%A1%E5%9E%8B%E3%80%81/">#生成式模型、</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
         <a href="/2025/07/06/%E6%A6%82%E7%8E%87%E5%9F%BA%E7%A1%80/" target="_self">
           概率基础
         </a>
@@ -237,7 +298,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2025/07/06/%E6%A6%82%E7%8E%87%E5%9F%BA%E7%A1%80/" target="_self">
         <div>
-          条件概率、联合概率、边缘概率条件概率：在一个事件发生的情况下，另一个事件发生的概率$$P(B|A)&#x3D;\frac{P(A,B)}{P(B)}$$链式法则（递推公式）：$$P(X_1,X_2,X_3,,\cdots,,X_n)&#x3D;P(X_i)\prod^{n}_{j,j\neq i}P(X_j)$$ 联合概率：两个事件同时发生的概率，在数学上记为： $P(A,B)$ 边缘概率：多个事
+          条件概率、联合概率、边缘概率 条件概率： 在一个事件发生的情况下，另一个事件发生的概率 $$ P(B|A)=\frac{P(A,B)}{P(B)} $$ 链式法则（递推公式）： $$ P(X_1,X_2,X_3,\,\cdots\,,X_n)=P(X_i)\prod^{n}_{j,j\neq i}P(X_j) $$ ### 联合概率： 两个事件同时发生的概率，在数学上记为： P(A,
         </div>
       </a>
 

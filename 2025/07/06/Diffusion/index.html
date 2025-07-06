@@ -1,0 +1,826 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Hal Wong">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="DDPM  加噪过程一步到位，去噪过程严格按照一步一步去噪，实现对噪声的预测，由于去噪过程需要一步一步进行，所以每次都要调用神经网络，导致生成较慢，所以考虑DDIM等加速生成的算法框架 加噪过程：前向过程被认为是马尔可夫过程，需要将数据分布逐步转换为噪声分布 $$ q(x_0,\ x_1,\ \dots\ ,x_T)&#x3D;q(x_0)\prod^{T}_{i}q(x_t|x_{t-1})">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Diffusion">
+<meta property="og:url" content="http://example.com/2025/07/06/Diffusion/index.html">
+<meta property="og:site_name" content="KEEP THINKING">
+<meta property="og:description" content="DDPM  加噪过程一步到位，去噪过程严格按照一步一步去噪，实现对噪声的预测，由于去噪过程需要一步一步进行，所以每次都要调用神经网络，导致生成较慢，所以考虑DDIM等加速生成的算法框架 加噪过程：前向过程被认为是马尔可夫过程，需要将数据分布逐步转换为噪声分布 $$ q(x_0,\ x_1,\ \dots\ ,x_T)&#x3D;q(x_0)\prod^{T}_{i}q(x_t|x_{t-1})">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/07/06/Diffusion/0.png">
+<meta property="og:image" content="http://example.com/2025/07/06/Diffusion/2.png">
+<meta property="article:published_time" content="2025-07-06T08:02:19.000Z">
+<meta property="article:modified_time" content="2025-07-06T11:18:43.132Z">
+<meta property="article:author" content="Hal Wong">
+<meta property="article:tag" content="生成式模型、">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/2025/07/06/Diffusion/0.png">
+  
+  
+  
+  <title>Diffusion - KEEP THINKING</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HAL</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Diffusion"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-06 16:02" pubdate>
+          2025年7月6日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          17 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Diffusion</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="ddpm">DDPM</h1>
+<ol type="1">
+<li>加噪过程一步到位，去噪过程严格按照一步一步去噪，实现对噪声的预测，由于去噪过程需要一步一步进行，所以每次都要调用神经网络，导致生成较慢，所以考虑DDIM等加速生成的算法框架</li>
+<li>加噪过程：前向过程被认为是马尔可夫过程，需要将数据分布逐步转换为噪声分布
+<span class="math display">$$
+q(x_0,\ x_1,\ \dots\ ,x_T)=q(x_0)\prod^{T}_{i}q(x_t|x_{t-1})
+$$</span> 输入数据<span class="math inline"><em>x</em></span>，噪声水平<span class="math inline"><em>t</em></span>，真实噪声<span class="math inline"><em>ϵ</em></span>。</li>
+<li>逆向过程：从噪声分布逆向还原数据分布，学习目标： <span class="math display">$$
+p_{\theta}(x_0,x_1,\dots,x_T)=p(x_T)\prod^{T}_{i}p_{\theta}(x_{t-1}|x_t)
+$$</span></li>
+</ol>
+<h2 id="数学推导">数学推导</h2>
+<p>扩散模型的训练本质上是变分推断，通过最大化证据下界（ELBO）来近似真实的后验分布<span class="math inline"> <em>p</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>)</span>，<span class="math inline"><em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>) </span>
+是真实后验的一个变分近似，而<span class="math inline"> <em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>)</span>是模型学习的分布</p>
+<p>原始数据点分布<span class="math inline"><em>x</em><sub>0</sub> ∼ <em>q</em>(<em>x</em><sub>0</sub>)</span>，构造马尔可夫加噪过程：
+<span class="math display">$$
+q(x_{1:T}|x_0)=\prod^{T}_{i}q(x_t|x_{t-1})
+$$</span> 状态转移核服从高斯条件分布： <span class="math display">$$
+q(x_t|x_{t-1})=\mathcal{N}(x_t\ ; \, \sqrt{1-\beta_t}x_{t-1}\ ,\ \beta
+\mathbf{I})\ ,\ \beta_t \in (0,1)_{t=1}^T
+$$</span> <span class="math inline"><em>β</em><sub><em>t</em></sub></span>为预定的噪声方差系数，由时间<span class="math inline"><strong>1</strong> <strong>∼</strong> <strong>T</strong></span>逐渐递增，可以是线性、指数等，<span class="math inline">$\sqrt{1-\beta_t}x_{t-1}\,$</span>为高斯分布的均值
+<em>经推导</em>： <span class="math display">$$\begin{equation}
+x_t = \sqrt{\alpha_t} x_0 + \sqrt{1 - {\alpha}_t} \, \epsilon, \quad
+\epsilon \sim \mathcal{N}(0,1)
+\end{equation}
+$$</span> 任意步的数值都可以从<span class="math inline"><em>x</em><sub>0</sub></span>导出，其中<span class="math inline">$\,\alpha_t=\prod^{t}_{s=1}(1-\beta_s)\,$</span></p>
+<p>逆向过程也是一个马尔可夫链，通过学习条件概率<span class="math inline"> <em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>) </span>逐步恢复<span class="math inline"><em>x</em><sub>0</sub></span>，引入神经网络<span class="math inline"><em>p</em><sub><em>θ</em></sub></span>来近似 <span class="math display"> <em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>)  = 𝒩(<em>x</em><sub><em>t</em> − 1</sub>; <em>μ</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>t</em>), ∑<sub><em>θ</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>t</em>))</span>
+其中，<span class="math inline"><em>μ</em><sub><em>θ</em></sub></span>
+和 <span class="math inline">∑<sub><em>θ</em></sub></span>
+是神经网络需要学习的均值和方差，通常<span class="math inline"> <em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>) </span>
+难以训练，可以使用<span class="math inline"><em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>) </span>近似，而<span class="math inline"><em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>) </span>
+难以直接估计，无法直接求出闭式解，所以使用可计算的真实后验<span class="math inline"><em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>) </span>近似，即在训练阶段，通过已知的<span class="math inline"><em>x</em><sub>0</sub></span>
+构造出一个真实的后验分布作为学习目标。</p>
+<p>近似原因：最终训练目标是训练模型<span class="math inline"><em>p</em><sub><em>θ</em></sub></span>，等价于最大化在给定模型下，观测数据<span class="math inline"><em>x</em><sub>0</sub></span> 的对数似然函数<span class="math inline"> log <em>p</em><sub><em>θ</em></sub>(<em>x</em><sub>0</sub>) </span>，<span class="math inline"> log <em>p</em><sub><em>θ</em></sub>(<em>x</em><sub>0</sub>) </span>的计算是困难的，可以通过变分下界（ELBO）来进行优化。
+<span class="math display">$$
+\log p_\theta(x_0)\geq
+L_{ELBO}=\mathbb{E}_{q(x_{1:T}|x_0)}\left[\log\frac{p_\theta(x_{0:T})}{q(x_{1:T}|x_0)}\right]
+$$</span> <span class="math display">$$
+L_{ELBO}=\underbrace{\mathbb{E}_q[\log
+p_\theta(x_0|x_1)]}_{\text{重构项}}-\underbrace{D_{KL}(q(x_T|x_0)||p(x_T))}_{\text{先验匹配项}}-\sum_{t=2}^T\underbrace{\mathbb{E}_q[D_{KL}(q(x_{t-1}|x_t,x_0)||p_\theta(x_{t-1}|x_t))]}_{\text{一致性项}}
+$$</span></p>
+<ul>
+<li>重构项<span class="math inline"><em>L</em><sub>0</sub></span>：从<span class="math inline"><em>x</em><sub><em>t</em></sub>恢复到<em>x</em><sub>0</sub></span>的过程，去噪过程的最后一步</li>
+<li>先验匹配项<span class="math inline"><em>L</em><sub><em>T</em></sub></span>：<span class="math inline"><em>p</em>(<em>T</em>)</span>是一个标准的正态分布，由于前向过程<span class="math inline"><em>T</em></span>足够大，<span class="math inline"><em>q</em>(<em>x</em><sub><em>T</em></sub>|<em>x</em><sub>0</sub>)</span>也近似于一个标准正态分布，此项[[KL散度]]
+接近于0，可忽略不计，同时其不包含任何可训练参数</li>
+<li>一致性项<span class="math inline"><em>L</em><sub><em>t</em> − 1</sub></span>：要求学习的反向学习过程<span class="math inline"><em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>)</span>与真实后验分布<span class="math inline"><em>q</em>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub><em>t</em> − 1</sub>, <em>x</em><sub>0</sub>)</span>尽可能匹配</li>
+</ul>
+<p><strong>一致性项<span class="math inline"><em>L</em><sub><em>t</em> − 1</sub></span>的简化</strong>
+<span class="math display"><em>L</em><sub><em>t</em> − 1</sub> = 𝔼<sub><em>q</em></sub>[<em>D</em><sub><em>K</em><em>L</em></sub>(<em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>)||<em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>))]</span>
+根据Bayes公式： <span class="math display">$$
+q(x_{t-1}|x_t,\,x_0)\,=\,\frac{q(x_t|x_{t-1},x_0)q(x_{t-1}|x_0)}{q(x_1|x_0)}=\frac{q(x_t|x_{t-1})q(x_{t-1}|x_0)}{q(x_1|x_0)}
+$$</span></p>
+<p><span class="math inline"><em>q</em>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub><em>t</em> − 1</sub>, <em>x</em><sub>0</sub>)和<em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub>0</sub>) </span>都是高斯分布，其乘积也是高斯分布。可以推导出<span class="math inline"><em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>) </span>的均值和方差</p>
+<p><span class="math display">$$
+\tilde{\mu}(x_t,x_0)=\frac{\sqrt{\alpha_{t-1}}\beta_{t}}{1-\alpha_{t}}x_{0}+\frac{\sqrt{1-\beta_{t}}(1-\alpha_{t-1})}{1-\alpha_{t}}x_{t}
+$$</span> <span class="math display">$$\tilde{\beta}_t=\frac{1-\alpha_{t-1}}{1-\alpha_t}\beta_t
+$$</span>
+在训练过程中均值和方差的参数均已知，故可以作为监督信号，指导神经网络的训练。通过最小化<span class="math inline"><em>p</em><sub><em>θ</em></sub> 和 <em>q</em> </span>
+之间的KL散度（或其他距离度量），可以有效训练模型</p>
+<p>理论训练目标需要最小化<span class="math display"><em>D</em><sub><em>K</em><em>L</em></sub>(<em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>) || <em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>) )</span>
+<span class="math display"><em>p</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>) = 𝒩(<em>x</em><sub><em>t</em> − 1</sub>; <em>μ</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>t</em>), <em>σ</em><sub><em>t</em></sub><sup>2</sup><strong>I</strong>)</span>
+<span class="math display"><em>q</em>(<em>x</em><sub><em>t</em> − 1</sub>|<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>) = 𝒩(<em>x</em><sub><em>t</em> − 1</sub>; <em>μ̃</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>), <em>β̃</em><sub><em>t</em></sub><strong>I</strong>)</span>
+两个高斯分布之间的[[KL散度]]会有一个解析解，由于方差项<span class="math inline"><em>σ</em><sub><em>t</em></sub><sup>2</sup></span>和<span class="math inline"><em>β̃</em><sub><em>t</em></sub></span>都是固定的（<em><span class="math inline"><em>σ</em><sub><em>t</em></sub><sup>2</sup></span>
+人为固定认为就是学习的最优值<span class="math inline"><em>β̃</em><sub><em>t</em></sub></span>
+，让网络学习均值而不是方差，是因为均值决定了生成内容，而方差决定了生成过程的随机性，生成目标是构建信号，故模型只需要学习均值，实验也证明了这一点</em>
+），不参与训练，故训练目标等价于最小化两个分布之间的L2距离： <span class="math display"><em>L</em><sub><em>t</em> − 1</sub> ∝ 𝔼<sub><em>q</em></sub>[||<em>μ̃</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>) − <em>μ</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>t</em>)||<sup>2</sup>]</span>
+利用<span class="math inline">$x_{t}=\sqrt{\bar{\alpha}_{t}}x_{0}+\sqrt{1-\bar{\alpha}_{t}}\epsilon\,$</span>反解出<span class="math inline"><em>x</em><sub>0</sub></span>，代入<span class="math inline"><em>μ̃</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>x</em><sub>0</sub>)</span>
+，可以得到： <span class="math display">$$
+\begin{aligned}&amp;\tilde{\mu}_t(x_t,x_0)=\frac{1}{\sqrt{\alpha_t}}\left(x_t-\frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon\right)\end{aligned}
+$$</span> 让<span class="math inline"><em>μ</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>t</em>)</span>具有和<span class="math inline"><em>μ̃</em></span>相同的函数形式，即让神经网络去预测噪声<span class="math inline"><em>ϵ</em></span> <span class="math display">$$\mu_\theta(x_t,t)=\frac{1}{\sqrt{\alpha_t}}\left(x_t-\frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)\right)$$</span>
+<span class="math inline"><em>θ</em>(<em>x</em><sub><em>t</em></sub>, <em>t</em>)</span>输入当前带噪数据数据<span class="math inline"><em>x</em><sub><em>t</em></sub></span>和时间步<span class="math inline"><em>t</em></span>，输出对噪声<span class="math inline"><em>ϵ</em></span>的预测 将<span class="math inline"><em>μ</em><sub><em>θ</em></sub></span>代入损失函数
+<span class="math display">$$
+\begin{aligned}&amp;L_{t-1}\propto\mathbb{E}_q\left[||\tilde{\mu}_t(x_t,x_0)-\mu_\theta(x_t,t)||^2\right]\\&amp;L_{t-1}\propto\mathbb{E}_q\left[||\frac{1}{\sqrt{\alpha_t}}\left(x_t-\frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon\right)-\frac{1}{\sqrt{\alpha_t}}\left(x_t-\frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)\right)||^2\right]\end{aligned}
+$$</span> 得到： <span class="math display">$$
+L_{t-1}\propto\mathbb{E}_{x_0,\epsilon,t}\left[\frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\bar{\alpha}_t)}||\epsilon-\epsilon_\theta(x_t,t)||^2\right]
+$$</span> 由于前面的系数是正的常数（对于给定的
+t），在优化时可以被视为权重。DDPM论文发现，忽略这些权重，直接使用最简单的形式，效果也非常好
+优化KL散度等价于最小化噪声预测的MSE: <span class="math display">ℒ<sub><em>t</em></sub> = 𝔼<sub><em>x</em><sub>0</sub>, <em>ϵ</em>, <em>t</em></sub>[∥<em>ϵ</em> − <em>ϵ</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>t</em>)∥<sup>2</sup>]</span>
+最终推导出的损失函数为，给定任意时刻<span class="math inline"> <em>t</em> </span>，带噪数据<span class="math inline"> <em>x</em><sub><em>t</em></sub> </span>，让神经网络<span class="math inline"> <em>ϵ</em><sub><em>θ</em></sub> </span>预测出当初用于生成<span class="math inline"> <em>x</em><sub><em>t</em></sub> </span>
+的原始噪声<span class="math inline"> <em>ϵ</em> </span>，并计算他们之间的均方误差用作反向传播</p>
+<h2 id="算法">算法</h2>
+<p><strong>整个过程是以去噪过程为核心，而非先加噪后去噪</strong></p>
+<h3 id="训练算法">训练算法</h3>
+<img src="/2025/07/06/Diffusion/0.png" srcset="/img/loading.gif" lazyload class title="training">
+<p>训练过程的目标是得到一个能够预测噪声的神经网络<span class="math inline"><em>ϵ</em><sub><em>θ</em></sub>(<em>x</em><sub><em>t</em></sub>, <em>t</em>)</span>，即给定加噪后的的数据<span class="math inline"><em>x</em><sub><em>t</em></sub></span>和时间步<span class="math inline"><em>t</em></span> ，预测出原始加入的噪声<span class="math inline"><em>ϵ</em></span>，通过最小化真实噪声和预测噪声之间的均方误差来训练</p>
+<ul>
+<li>从数据集中随机采样一个真实的干净数据<span class="math inline"><em>q</em> ∼ <em>q</em>(<em>x</em><sub>0</sub>)</span></li>
+<li>从时间步中<span class="math inline">{1, …, <em>T</em>}</span>中均匀采样一个时间步<span class="math inline"><em>t</em> ∼ Uniform({1, …, <em>T</em>})</span></li>
+<li>从标准高斯分布中随机采样一个噪声<span class="math inline"><em>ϵ</em> ∼ 𝒩(0, I)</span></li>
+<li>梯度下降计算损失，反向传播进行参数更新 <span class="math display">$$
+\nabla_\theta \left| \epsilon - \epsilon_\theta(\sqrt{\bar{\alpha}_t}
+x_0 + \sqrt{1 - \bar{\alpha}_t} \epsilon, t) \right|^2
+$$</span></li>
+<li>直到模型收敛</li>
+</ul>
+<h3 id="采样算法">采样算法</h3>
+<img src="/2025/07/06/Diffusion/2.png" srcset="/img/loading.gif" lazyload class title="sampleing">
+<ul>
+<li>从高斯噪声中随机采样一个数据</li>
+<li>从 <span class="math inline"><em>T</em></span> 步开始反向去噪：
+<span class="math display">$$
+x_{t-1} = \frac{1}{\sqrt{\alpha_t}} \left( x_t - \frac{1 -
+\alpha_t}{\sqrt{1 - \bar{\alpha}_t}} \epsilon_\theta(x_t, t) \right) +
+\sigma_t z
+$$</span> 直到时间步 <span class="math inline"><em>t</em> = 1</span>
+结束推理，其中 <span class="math inline"><em>z</em></span>
+是一个新加入的随机噪声，保证生成过程的随机性，<span class="math inline"><em>σ</em><sub><em>t</em></sub></span>
+是一个反向过程的方差，通常设置为 <span class="math inline">$\sqrt{\beta_t}$</span></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%94%9F%E6%88%90%E5%BC%8F%E6%A8%A1%E5%9E%8B/" class="category-chain-item">生成式模型</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E7%94%9F%E6%88%90%E5%BC%8F%E6%A8%A1%E5%9E%8B%E3%80%81/" class="print-no-link">#生成式模型、</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Diffusion</div>
+      <div>http://example.com/2025/07/06/Diffusion/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Hal Wong</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月6日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/06/%E6%A6%82%E7%8E%87%E5%9F%BA%E7%A1%80/" title="概率基础">
+                        <span class="hidden-mobile">概率基础</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

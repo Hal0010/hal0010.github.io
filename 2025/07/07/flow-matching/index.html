@@ -19,15 +19,15 @@
   <meta name="author" content="Hal">
   <meta name="keywords" content="">
   
-    <meta name="description" content="流匹配 流匹配是一种概率生成模型，通过学习一个常微分方程，实现从先验分布向目标分布的变换。 微分方程可以定义为： $$ \frac{d}{dt}x_{t}&#x3D;v_{t}(x_{t}) $$ 其中 vt(xt) 是时间和状态相关的速度场，这个速度场决定了数据如何从 p0 转换为 p1 。如果从 t &#x3D; 0 的一个噪声样本开始，沿着这个向量场积分到 t &#x3D; 1，就能得到一个数据样本 x1">
+    <meta name="description" content="概率密度函数的变量变换 给定随机变量 z ∼ π(z) ，通过映射函数 f 得到新的随机变量 x &#x3D; f(z) ，若存在逆函数 f−1 ，则新变量 x 的概率密度函数 p(x) 为： * z 为随机变量 $$ p(x)&#x3D;\pi(z)\left|\frac{dz}{dx}\right|&#x3D;\pi\left(f^{-1}(x)\right)\left|\frac{df^{-1}}{dx}\">
 <meta property="og:type" content="article">
 <meta property="og:title" content="flow matching">
 <meta property="og:url" content="http://example.com/2025/07/07/flow-matching/index.html">
 <meta property="og:site_name" content="KEEP THINKING">
-<meta property="og:description" content="流匹配 流匹配是一种概率生成模型，通过学习一个常微分方程，实现从先验分布向目标分布的变换。 微分方程可以定义为： $$ \frac{d}{dt}x_{t}&#x3D;v_{t}(x_{t}) $$ 其中 vt(xt) 是时间和状态相关的速度场，这个速度场决定了数据如何从 p0 转换为 p1 。如果从 t &#x3D; 0 的一个噪声样本开始，沿着这个向量场积分到 t &#x3D; 1，就能得到一个数据样本 x1">
+<meta property="og:description" content="概率密度函数的变量变换 给定随机变量 z ∼ π(z) ，通过映射函数 f 得到新的随机变量 x &#x3D; f(z) ，若存在逆函数 f−1 ，则新变量 x 的概率密度函数 p(x) 为： * z 为随机变量 $$ p(x)&#x3D;\pi(z)\left|\frac{dz}{dx}\right|&#x3D;\pi\left(f^{-1}(x)\right)\left|\frac{df^{-1}}{dx}\">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-07T06:57:50.000Z">
-<meta property="article:modified_time" content="2025-07-07T07:07:08.599Z">
+<meta property="article:modified_time" content="2025-07-07T14:04:43.222Z">
 <meta property="article:author" content="Hal">
 <meta property="article:tag" content="生成式、深度学习、概率模型">
 <meta name="twitter:card" content="summary_large_image">
@@ -223,7 +223,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          418 字
+          2k 字
         
       </span>
     
@@ -234,7 +234,7 @@
         
         
         
-          4 分钟
+          17 分钟
         
       </span>
     
@@ -276,23 +276,87 @@
             
               <div class="markdown-body">
                 
-                <h3 id="流匹配">流匹配</h3>
-<p>流匹配是一种概率生成模型，通过学习一个常微分方程，实现从先验分布向目标分布的变换。
-微分方程可以定义为： <span class="math display">$$
+                <h3 id="概率密度函数的变量变换">概率密度函数的变量变换</h3>
+<p>给定随机变量 <span class="math inline"><em>z</em> ∼ <em>π</em>(<em>z</em>)</span>
+，通过映射函数 <span class="math inline"><em>f</em></span>
+得到新的随机变量 <span class="math inline"><em>x</em> = <em>f</em>(<em>z</em>)</span>
+，若存在逆函数 <span class="math inline"><em>f</em><sup>−1</sup></span>
+，则新变量 <span class="math inline"><em>x</em></span> 的概率密度函数
+<span class="math inline"><em>p</em>(<em>x</em>)</span> 为： * <span class="math inline"><em>z</em></span> 为随机变量 <span class="math display">$$
+p(x)=\pi(z)\left|\frac{dz}{dx}\right|=\pi\left(f^{-1}(x)\right)\left|\frac{df^{-1}}{dx}\right|=\pi\left(f^{-1}(x)\right)\left|\left(f^{-1}\right)^{\prime}(x)\right|
+$$</span> * <span class="math inline"><em>z</em></span> 为随机向量 <span class="math display">$$p(\mathbf{x})=\pi(\mathbf{z})\left|\det\frac{d\mathbf{z}}{d\mathbf{x}}\right|=\pi\left(f^{-1}(\mathbf{x})\right)\left|\det\frac{df^{-1}}{d\mathbf{x}}\right|$$</span></p>
+<h3 id="归一化流-normalizing-flows">归一化流 （ Normalizing Flows）</h3>
+<p><strong>Normalizing Flows(NFs)</strong>
+是一种可逆的概率密度变换方法，它的核心思想是通过一系列可逆的变换函数来逐步将一个简单分布（通常是高斯分布）转换成一个复杂的目标分布。这个过程可以被看作是一连串的变量替换的迭代过程，每次替换都遵循概率密度函数的变量变换原则。原始分布
+<span class="math inline"><em>p</em><sub>0</sub>(<em>z</em><sub>0</sub>)</span>，通过一系列的变换
+<span class="math inline">{<em>f</em><sub><em>i</em></sub>}</span>
+将其转换成目标分布 <span class="math inline"><em>p</em><sub>1</sub>(<em>x</em>)</span>
+，变换过程可以表示为： <span class="math display"><strong>x</strong> = <strong>z</strong><sub><em>K</em></sub> = <em>f</em><sub><em>K</em></sub> ∘ <em>f</em><sub><em>K</em> − 1</sub> ∘ ⋯ ∘ <em>f</em><sub>1</sub>(<strong>z</strong><sub>0</sub>)</span>
+对于第 <span class="math inline"><em>i</em></span> 步，有： <span class="math display"><strong>z</strong><sub><em>i</em> − 1</sub> ∼ <em>p</em><sub><em>i</em> − 1</sub>(<strong>z</strong><sub><em>i</em> − 1</sub>)</span>
+<span class="math display"><strong>z</strong><sub><em>i</em></sub> = <em>f</em><sub><em>i</em></sub>(<strong>z</strong><sub><em>i</em> − 1</sub>), thus<strong>z</strong><sub><em>i</em> − 1</sub> = <em>f</em><sub><em>i</em></sub><sup>−1</sup>(<strong>z</strong><sub><em>i</em></sub>)</span>
+代入概率密度变量变换关系有： <span class="math display">$$p_i\left(\mathbf{z}_i\right)=p_{i-1}\left(f_i^{-1}\left(\mathbf{z}_i\right)\right)\left|\det\frac{df_i^{-1}}{d\mathbf{z}_i}\right|=p_{i-1}\left(\mathbf{z}_{i-1}\right)\left|\det\frac{df_i}{d\mathbf{z}_{i-1}}\right|^{-1}$$</span>
+对数似然： <span class="math display">$$\log
+p_i\left(\mathbf{z}_i\right)=\log
+p_{i-1}\left(\mathbf{z}_{i-1}\right)-\log\left|\det\frac{df_i}{d\mathbf{z}_{i-1}}\right|$$</span>
+递推至初始分布： <span class="math display">$$\log
+p(\mathbf{x})=\log\pi_K\left(\mathbf{z}_K\right)=\log\pi_{K-1}\left(\mathbf{z}_{K-1}\right)-\log\left|\det\frac{df_K}{d\mathbf{z}_{K-1}}\right|=\log\pi_0\left(\mathbf{z}_0\right)-\sum_{i=1}^K\log|\det\frac{df_i}{d\mathbf{z}_{i-1}}|$$</span>
+当一系列变换函数 <span class="math inline"><em>f</em><sub><em>i</em></sub></span>
+可逆，优化目标为负对数似然： <span class="math display">$$\mathcal{L}(\mathcal{D})=-\frac{1}{|\mathcal{D}|}\sum_{\mathbf{x}\in\mathcal{D}}\log
+p(\mathbf{x})$$</span> ### 连续归一化流（ Continuous Normalizing Flows）
+<strong>Continuous Normalizing Flows
+(CNFs)</strong> 是 <strong>Normalizing
+Flows</strong> 的一种扩展，它可以更好地建模复杂的概率分布。在传统的归一化流中，变换通常是通过一系列<strong>可逆的离散函数</strong>来定义的，而在<strong>CNFs</strong>中，这种变换是<strong>连续的</strong>，这使得模型能够更加平滑地适应数据的分布，提高了模型的表达能力。<strong>CNFs</strong>过程通过
+<strong>常微分方程（ODE）</strong> 来表示： <span class="math display">$$
 \frac{d}{dt}x_{t}=v_{t}(x_{t})
-$$</span></p>
-<p>其中 <span class="math inline"><em>v</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>)</span>
+$$</span> 其中 <span class="math inline"><em>v</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>)</span>
 是时间和状态相关的<strong>速度场</strong>，这个速度场决定了数据如何从
-<span class="math inline"><em>p</em><sub>0</sub></span> 转换为 <span class="math inline"><em>p</em><sub>1</sub></span> 。如果从 <span class="math inline"><em>t</em> = 0</span>
-的一个噪声样本开始，沿着这个向量场积分到 <span class="math inline"><em>t</em> = 1</span>，就能得到一个数据样本 <span class="math inline"><em>x</em><sub>1</sub> ≈ <em>p</em><sub>1</sub></span>。</p>
-<p>由于无法得知整个分布的演化，观察一个特定的数据点 <span class="math inline"><em>x</em><sub>1</sub> ∼ <em>p</em><sub>1</sub></span>
-是如何从噪声演变来的。可以定义一个任意从噪声点 <span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>
-到这个特定数据点 <span class="math inline"><em>x</em><sub>1</sub></span>
-的路径。这个路径只依赖于选定的 <span class="math inline"><em>x</em><sub>0</sub>和<em>x</em><sub>1</sub></span>
-，记条件概率路径为 <span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>
-，定义了概率路径后就可以计算出对应的条件向量场<span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>
-。</p>
-<p><em>eg:矫正流</em> 使用线性插值定义概率路径： <span class="math display"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span>
+<span class="math inline"><em>p</em><sub>0</sub></span> 转换为 <span class="math inline"><em>p</em><sub>1</sub></span>
+，通常使用神经网络预测，<span class="math inline"><em>x</em><sub><em>t</em></sub></span>是<strong>Fow
+Map</strong> ，简单理解为时间 <span class="math inline"><em>t</em></span>
+下的数据点。理论上知道了速度场就可以通过求解微分方程推出任意一个噪声点是如何移动的，从而得到整个分布的变换过程，但是在训练时，需要一个目标训练场来指导模型的学习。</p>
+<p><strong>概率流连续性方程</strong>：由于概率密度的性质确保了在全体分布上的积分为1，这说明概率的总和是固定的，即概率也是守恒的，类似于流体力学中的连续性方程，数据的概率密度分布
+<span class="math inline"><em>p</em><sub><em>t</em></sub></span>
+随时间变化也满足连续性方程： <span class="math display">$$
+\frac{\partial{p_{t}(x)}}{\partial{t}}=-\nabla\cdot[v_{t}(x)p_{t}(x)]
+$$</span> 连续化方程描述了概率密度 <span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>)</span>
+随时间的演化关系，其中 <span class="math inline">∇⋅</span>
+是散度算子，表示某个向量场的发散程度，<span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>)</span>
+表示在 <span class="math inline"><em>t</em></span> 时刻点 <span class="math inline"><em>x</em></span> 处的概率密度，<span class="math inline"><em>v</em><sub><em>t</em></sub>(<em>x</em>)</span>
+是时间 <span class="math inline"><em>t</em></span>
+处的速度场，表示数据点如何随时间移动。 ### 条件概率流 对于目标分布为
+<span class="math inline"><em>p</em><sub>1</sub>(<em>x</em><sub>1</sub>)</span>
+的每个数据样本 <span class="math inline"><em>x</em><sub>1</sub></span>
+，将目标数据点本身作为条件变量，定义随时间变化的条件概率路径<span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>|<em>x</em><sub>1</sub>)</span>，对条件概率进行边缘化积分，得到边缘概率路径：
+<span class="math display"><em>p</em><sub><em>t</em></sub>(<em>x</em>) = ∫<em>p</em><sub><em>t</em></sub>(<em>x</em>, <em>x</em><sub>1</sub>)<em>d</em><em>x</em><sub>1</sub> = ∫<em>p</em><sub><em>t</em></sub>(<em>x</em> ∣ <em>x</em><sub>1</sub>)<em>p</em><sub>1</sub>(<em>x</em><sub>1</sub>)<em>d</em><em>x</em><sub>1</sub></span>
+条件向量场：<span class="math inline"><strong>u</strong><sub><strong>t</strong></sub>(<em>x</em>|<em>x</em><sub><em>t</em></sub>)</span>
+，表示给定 <span class="math inline"><em>x</em><sub>1</sub></span>
+的条件下，当前时刻 <span class="math inline"><em>t</em></span>
+的速度向量。 边缘向量场：<span class="math inline"><strong>u</strong><sub><strong>t</strong></sub>(<em>x</em>)</span>，表示总体概率质量如何在时间上流动，是所求的目标，通过对每个条件向量场加权积分后得到边缘向量场。
+<span class="math display">$$\mathbf{u}_t(x)=\int\mathbf{u}_t(x\mid
+x_1)\cdot\frac{p_t(x\mid x_1)p_{1}(x_1)}{p_t(x)}dx_1$$</span> 权重：
+<span class="math display">$$
+\frac{p_t(x\mid x_1)p_{1}(x_1)}{p_t(x)}
+$$</span> 表示边缘密度中 <span class="math inline"><em>x</em><sub>1</sub></span> 的条件概率的占比 ###
+流匹配 对于连续归一化流，最直观的方法就是在给定初始条件 <span class="math inline"><em>x</em><sub>0</sub></span> 的条件下，通过ODE
+求解来得到 <span class="math inline"><em>x</em><sub>1</sub><sup>′</sup></span>
+的分布，然后通过一种最小化差异的度量（kl散度等）来约束预测值 <span class="math inline"><em>x</em><sub>1</sub><sup>′</sup></span> 和真实值
+<span class="math inline"><em>x</em><sub>1</sub></span>
+的分布保持一致。然而反复<strong>模拟ODE</strong>的计算量巨大，因此这种方法可实施性不高。
+流匹配通过确保模型预测的向量场与描述数据点实际运动的向量场之间的动态特性保持一致性，从而确保通过CNFs变换得到的最终概率分布与期望的目标分布相匹配。直接的训练目标是使用神经网络
+<span class="math inline"><em>V</em><sub><em>θ</em></sub>(<em>x</em>, <em>t</em>)</span>
+匹配理想的边缘向量场 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>。
+<span class="math display">ℒ<sub>marginal</sub>(<em>θ</em>) = 𝔼<sub><strong>x</strong> ∼ <em>p</em><sub><em>t</em></sub>(<strong>x</strong>)</sub>||<strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong>, <em>t</em>) − <strong>u</strong><sub><em>t</em></sub>(<strong>x</strong>)||<sup>2</sup></span>
+流匹配的核心思想是最小化这个损失函数，使得学习的向量场 <span class="math inline"><strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong>, <em>t</em>)</span>
+和真实向量场 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>
+尽可能接近，从而能确保能准确生成目标概率密度路径 <span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>)</span>
+。 但往往缺乏先验知识来确定合适的 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>
+和 <span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>)</span>
+，因此其无法直接使用，为了解决这个问题，论文提出了<strong>条件流匹配（
+Conditional Flow
+Matching）</strong>，可以采用一种基于样本的方法，实现向量场和概率路径的求解。通过为每个样本独立定义概率路径和向量场，之后将其聚合得到整个概率路径和向量场。
+论文证明了优化CFM的目标等同于优化FM的目标，无需计算边缘概率路径或边缘向量场，<strong>只需要设计一个合适的条件概率路径和向量场即可。</strong></p>
+<h3 id="矫正流">矫正流</h3>
+<p>使用线性插值定义概率路径： <span class="math display"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span>
 对时间求导：得到目标向量场： <span class="math display"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>) = <em>x</em><sub>1</sub> − <em>x</em><sub>0</sub></span>
 条件流匹配（CFM）的损失可以定义为： <span class="math display">ℒ<sub>CFM</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong><sub><em>t</em></sub>, <em>t</em>) − <strong>u</strong><sub><em>t</em></sub>(<strong>x</strong><sub><em>t</em></sub>|<strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub>)||<sup>2</sup>]</span>
 其中，<span class="math inline">𝔼</span> 表示对时间 <span class="math inline"><em>t</em> ∼ <em>U</em>(0, 1)</span> ，噪声 <span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>
@@ -300,7 +364,18 @@ $$</span></p>
 进行采样求期望，实际计算形式为： <span class="math display">ℒ<sub>RectifiedFlow</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>((1 − <em>t</em>)<strong>x</strong><sub>0</sub> + <em>t</em><strong>x</strong><sub>1</sub>, <em>t</em>) − (<strong>x</strong><sub>1</sub> − <strong>x</strong><sub>0</sub>)||<sup>2</sup>]</span>
 数学上可以严格证明： <strong>最小化条件匹配流损失</strong> <span class="math inline">ℒ<sub>CFM</sub></span> 等价于最小化边缘匹配流损失
 <span class="math inline">ℒ<sub>marginal</sub></span> 故： <span class="math display">∇<sub><em>θ</em></sub>ℒ<sub>CFM</sub>(<em>θ</em>) = ∇<sub><em>θ</em></sub>ℒ<sub>marginal</sub>(<em>θ</em>)</span>
-通过让模型学习 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，即可得到目标向量场。</p>
+通过让模型学习 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，即可得到目标向量场。
+### 算法流程 对于训练中的每一步： 1. 从均匀分布 <span class="math inline"><em>U</em>(0, 1)</span> 中随机采样一个时间 <span class="math inline"><em>t</em></span> 2. 采样数据 <span class="math inline"><em>x</em><sub>1</sub> ∼ <em>p</em><sub>1</sub></span>
+，<span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>
+3. 构造训练对： * 输入样本：<span class="math inline"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span>
+* 目标向量：<span class="math inline"><em>u</em> = <em>x</em><sub>1</sub> − <em>x</em><sub>0</sub></span>
+4. 将 <span class="math inline"><em>x</em><sub><em>t</em></sub>、<em>t</em></span>
+输入到神经网络 <span class="math inline"><strong>v</strong><sub><strong>θ</strong></sub></span>
+得到预测向量 <span class="math inline">$\hat{\mathbf{u}} =
+\mathbf{v}_\theta(x_t,t)$</span> 5. 计算损失，<span class="math inline">$L=||\hat{\mathbf{u}}-\mathbf{u}||$</span> 6.
+更新参数 ### [DDPM] 与 FM
+流匹配的核心是学习一个向量场，之后使用数值方法求解，向量场确定后演化路径唯一确定，采样结果唯一确定
+扩散模型理论上基于随机微分方程，在采样时会额外添加随机的偏移，最终生成的结果会有细微的差别。</p>
 
                 
               </div>

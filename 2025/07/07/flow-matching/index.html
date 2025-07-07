@@ -27,7 +27,7 @@
 <meta property="og:description" content="概率密度函数的变量变换 给定随机变量 z ∼ π(z) ，通过映射函数 f 得到新的随机变量 x &#x3D; f(z) ，若存在逆函数 f−1 ，则新变量 x 的概率密度函数 p(x) 为： * z 为随机变量 $$ p(x)&#x3D;\pi(z)\left|\frac{dz}{dx}\right|&#x3D;\pi\left(f^{-1}(x)\right)\left|\frac{df^{-1}}{dx}\">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-07T06:57:50.000Z">
-<meta property="article:modified_time" content="2025-07-07T14:13:41.834Z">
+<meta property="article:modified_time" content="2025-07-07T14:16:29.188Z">
 <meta property="article:author" content="Hal">
 <meta property="article:tag" content="生成式、深度学习、概率模型">
 <meta name="twitter:card" content="summary_large_image">
@@ -345,27 +345,32 @@ $$</span> 表示边缘密度中 <span class="math inline"><em>x</em><sub>1</sub>
 的分布保持一致。然而反复<strong>模拟ODE</strong>的计算量巨大，因此这种方法可实施性不高。
 流匹配通过确保模型预测的向量场与描述数据点实际运动的向量场之间的动态特性保持一致性，从而确保通过CNFs变换得到的最终概率分布与期望的目标分布相匹配。直接的训练目标是使用神经网络
 <span class="math inline"><em>V</em><sub><em>θ</em></sub>(<em>x</em>, <em>t</em>)</span>
-匹配理想的边缘向量场 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>。
-<span class="math display">ℒ<sub>marginal</sub>(<em>θ</em>) = 𝔼<sub><strong>x</strong> ∼ <em>p</em><sub><em>t</em></sub>(<strong>x</strong>)</sub>||<strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong>, <em>t</em>) − <strong>u</strong><sub><em>t</em></sub>(<strong>x</strong>)||<sup>2</sup></span>
-流匹配的核心思想是最小化这个损失函数，使得学习的向量场 <span class="math inline"><strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong>, <em>t</em>)</span>
+匹配理想的边缘向量场 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>。</p>
+<p><span class="math display">ℒ<sub>marginal</sub>(<em>θ</em>) = 𝔼<sub><strong>x</strong> ∼ <em>p</em><sub><em>t</em></sub>(<strong>x</strong>)</sub>||<strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong>, <em>t</em>) − <strong>u</strong><sub><em>t</em></sub>(<strong>x</strong>)||<sup>2</sup></span></p>
+<p>流匹配的核心思想是最小化这个损失函数，使得学习的向量场 <span class="math inline"><strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong>, <em>t</em>)</span>
 和真实向量场 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>
 尽可能接近，从而能确保能准确生成目标概率密度路径 <span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>)</span>
-。 但往往缺乏先验知识来确定合适的 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>
+。</p>
+<p>但往往缺乏先验知识来确定合适的 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>)</span>
 和 <span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>)</span>
 ，因此其无法直接使用，为了解决这个问题，论文提出了<strong>条件流匹配（
 Conditional Flow
 Matching）</strong>，可以采用一种基于样本的方法，实现向量场和概率路径的求解。通过为每个样本独立定义概率路径和向量场，之后将其聚合得到整个概率路径和向量场。
 论文证明了优化CFM的目标等同于优化FM的目标，无需计算边缘概率路径或边缘向量场，<strong>只需要设计一个合适的条件概率路径和向量场即可。</strong></p>
 <h3 id="矫正流">矫正流</h3>
-<p>使用线性插值定义概率路径： <span class="math display"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span>
-对时间求导：得到目标向量场： <span class="math display"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>) = <em>x</em><sub>1</sub> − <em>x</em><sub>0</sub></span>
-条件流匹配（CFM）的损失可以定义为： <span class="math display">ℒ<sub>CFM</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong><sub><em>t</em></sub>, <em>t</em>) − <strong>u</strong><sub><em>t</em></sub>(<strong>x</strong><sub><em>t</em></sub>|<strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub>)||<sup>2</sup>]</span>
-其中，<span class="math inline">𝔼</span> 表示对时间 <span class="math inline"><em>t</em> ∼ <em>U</em>(0, 1)</span> ，噪声 <span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>
+<p>使用线性插值定义概率路径：</p>
+<p><span class="math display"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span></p>
+<p>对时间求导：得到目标向量场： <span class="math display"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>) = <em>x</em><sub>1</sub> − <em>x</em><sub>0</sub></span></p>
+<p>条件流匹配（CFM）的损失可以定义为：</p>
+<p><span class="math display">ℒ<sub>CFM</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong><sub><em>t</em></sub>, <em>t</em>) − <strong>u</strong><sub><em>t</em></sub>(<strong>x</strong><sub><em>t</em></sub>|<strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub>)||<sup>2</sup>]</span></p>
+<p>其中，<span class="math inline">𝔼</span> 表示对时间 <span class="math inline"><em>t</em> ∼ <em>U</em>(0, 1)</span> ，噪声 <span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>
 和目标分布 <span class="math inline"><em>x</em><sub>1</sub> ∼ <em>p</em><sub>1</sub></span>
-进行采样求期望，实际计算形式为： <span class="math display">ℒ<sub>RectifiedFlow</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>((1 − <em>t</em>)<strong>x</strong><sub>0</sub> + <em>t</em><strong>x</strong><sub>1</sub>, <em>t</em>) − (<strong>x</strong><sub>1</sub> − <strong>x</strong><sub>0</sub>)||<sup>2</sup>]</span>
-数学上可以严格证明： <strong>最小化条件匹配流损失</strong> <span class="math inline">ℒ<sub>CFM</sub></span> 等价于最小化边缘匹配流损失
-<span class="math inline">ℒ<sub>marginal</sub></span> 故： <span class="math display">∇<sub><em>θ</em></sub>ℒ<sub>CFM</sub>(<em>θ</em>) = ∇<sub><em>θ</em></sub>ℒ<sub>marginal</sub>(<em>θ</em>)</span>
-通过让模型学习 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，即可得到目标向量场。</p>
+进行采样求期望，实际计算形式为：</p>
+<p><span class="math display">ℒ<sub>RectifiedFlow</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>((1 − <em>t</em>)<strong>x</strong><sub>0</sub> + <em>t</em><strong>x</strong><sub>1</sub>, <em>t</em>) − (<strong>x</strong><sub>1</sub> − <strong>x</strong><sub>0</sub>)||<sup>2</sup>]</span></p>
+<p>数学上可以严格证明： <strong>最小化条件匹配流损失</strong> <span class="math inline">ℒ<sub>CFM</sub></span> 等价于最小化边缘匹配流损失
+<span class="math inline">ℒ<sub>marginal</sub></span> 故：</p>
+<p><span class="math display">∇<sub><em>θ</em></sub>ℒ<sub>CFM</sub>(<em>θ</em>) = ∇<sub><em>θ</em></sub>ℒ<sub>marginal</sub>(<em>θ</em>)</span></p>
+<p>通过让模型学习 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，即可得到目标向量场。</p>
 <h3 id="算法流程">算法流程</h3>
 <p>对于训练中的每一步：</p>
 <ol type="1">

@@ -27,7 +27,7 @@
 <meta property="og:description" content="概率密度函数的变量变换 给定随机变量 z ∼ π(z) ，通过映射函数 f 得到新的随机变量 x &#x3D; f(z) ，若存在逆函数 f−1 ，则新变量 x 的概率密度函数 p(x) 为： * z 为随机变量 $$ p(x)&#x3D;\pi(z)\left|\frac{dz}{dx}\right|&#x3D;\pi\left(f^{-1}(x)\right)\left|\frac{df^{-1}}{dx}\">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-07T06:57:50.000Z">
-<meta property="article:modified_time" content="2025-07-07T14:04:43.222Z">
+<meta property="article:modified_time" content="2025-07-07T14:13:41.834Z">
 <meta property="article:author" content="Hal">
 <meta property="article:tag" content="生成式、深度学习、概率模型">
 <meta name="twitter:card" content="summary_large_image">
@@ -336,8 +336,9 @@ $$</span> 连续化方程描述了概率密度 <span class="math inline"><em>p</
 x_1)\cdot\frac{p_t(x\mid x_1)p_{1}(x_1)}{p_t(x)}dx_1$$</span> 权重：
 <span class="math display">$$
 \frac{p_t(x\mid x_1)p_{1}(x_1)}{p_t(x)}
-$$</span> 表示边缘密度中 <span class="math inline"><em>x</em><sub>1</sub></span> 的条件概率的占比 ###
-流匹配 对于连续归一化流，最直观的方法就是在给定初始条件 <span class="math inline"><em>x</em><sub>0</sub></span> 的条件下，通过ODE
+$$</span> 表示边缘密度中 <span class="math inline"><em>x</em><sub>1</sub></span> 的条件概率的占比。</p>
+<h3 id="流匹配">流匹配</h3>
+<p>对于连续归一化流，最直观的方法就是在给定初始条件 <span class="math inline"><em>x</em><sub>0</sub></span> 的条件下，通过ODE
 求解来得到 <span class="math inline"><em>x</em><sub>1</sub><sup>′</sup></span>
 的分布，然后通过一种最小化差异的度量（kl散度等）来约束预测值 <span class="math inline"><em>x</em><sub>1</sub><sup>′</sup></span> 和真实值
 <span class="math inline"><em>x</em><sub>1</sub></span>
@@ -364,17 +365,28 @@ Matching）</strong>，可以采用一种基于样本的方法，实现向量场
 进行采样求期望，实际计算形式为： <span class="math display">ℒ<sub>RectifiedFlow</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>((1 − <em>t</em>)<strong>x</strong><sub>0</sub> + <em>t</em><strong>x</strong><sub>1</sub>, <em>t</em>) − (<strong>x</strong><sub>1</sub> − <strong>x</strong><sub>0</sub>)||<sup>2</sup>]</span>
 数学上可以严格证明： <strong>最小化条件匹配流损失</strong> <span class="math inline">ℒ<sub>CFM</sub></span> 等价于最小化边缘匹配流损失
 <span class="math inline">ℒ<sub>marginal</sub></span> 故： <span class="math display">∇<sub><em>θ</em></sub>ℒ<sub>CFM</sub>(<em>θ</em>) = ∇<sub><em>θ</em></sub>ℒ<sub>marginal</sub>(<em>θ</em>)</span>
-通过让模型学习 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，即可得到目标向量场。
-### 算法流程 对于训练中的每一步： 1. 从均匀分布 <span class="math inline"><em>U</em>(0, 1)</span> 中随机采样一个时间 <span class="math inline"><em>t</em></span> 2. 采样数据 <span class="math inline"><em>x</em><sub>1</sub> ∼ <em>p</em><sub>1</sub></span>
-，<span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>
-3. 构造训练对： * 输入样本：<span class="math inline"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span>
-* 目标向量：<span class="math inline"><em>u</em> = <em>x</em><sub>1</sub> − <em>x</em><sub>0</sub></span>
-4. 将 <span class="math inline"><em>x</em><sub><em>t</em></sub>、<em>t</em></span>
+通过让模型学习 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，即可得到目标向量场。</p>
+<h3 id="算法流程">算法流程</h3>
+<p>对于训练中的每一步：</p>
+<ol type="1">
+<li>从均匀分布 <span class="math inline"><em>U</em>(0, 1)</span>
+中随机采样一个时间 <span class="math inline"><em>t</em></span></li>
+<li>采样数据 <span class="math inline"><em>x</em><sub>1</sub> ∼ <em>p</em><sub>1</sub></span>
+，<span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span></li>
+<li>构造训练对：
+<ul>
+<li>输入样本：<span class="math inline"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span></li>
+<li>目标向量：<span class="math inline"><em>u</em> = <em>x</em><sub>1</sub> − <em>x</em><sub>0</sub></span></li>
+</ul></li>
+<li>将 <span class="math inline"><em>x</em><sub><em>t</em></sub>、<em>t</em></span>
 输入到神经网络 <span class="math inline"><strong>v</strong><sub><strong>θ</strong></sub></span>
 得到预测向量 <span class="math inline">$\hat{\mathbf{u}} =
-\mathbf{v}_\theta(x_t,t)$</span> 5. 计算损失，<span class="math inline">$L=||\hat{\mathbf{u}}-\mathbf{u}||$</span> 6.
-更新参数 ### [DDPM] 与 FM
-流匹配的核心是学习一个向量场，之后使用数值方法求解，向量场确定后演化路径唯一确定，采样结果唯一确定
+\mathbf{v}_\theta(x_t,t)$</span></li>
+<li>计算损失，<span class="math inline">$L=||\hat{\mathbf{u}}-\mathbf{u}||$</span></li>
+<li>更新参数</li>
+</ol>
+<h3 id="ddpm-与-fm">[DDPM] 与 FM</h3>
+<p>流匹配的核心是学习一个向量场，之后使用数值方法求解，向量场确定后演化路径唯一确定，采样结果唯一确定
 扩散模型理论上基于随机微分方程，在采样时会额外添加随机的偏移，最终生成的结果会有细微的差别。</p>
 
                 

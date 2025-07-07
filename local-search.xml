@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>flow matching</title>
+    <link href="/2025/07/07/flow-matching/"/>
+    <url>/2025/07/07/flow-matching/</url>
+    
+    <content type="html"><![CDATA[<h3 id="流匹配">流匹配</h3><p>流匹配是一种概率生成模型，通过学习一个常微分方程，实现从先验分布向目标分布的变换。微分方程可以定义为： <span class="math display">$$\frac{d}{dt}x_{t}=v_{t}(x_{t})$$</span></p><p>其中 <span class="math inline"><em>v</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>)</span>是时间和状态相关的<strong>速度场</strong>，这个速度场决定了数据如何从<span class="math inline"><em>p</em><sub>0</sub></span> 转换为 <span class="math inline"><em>p</em><sub>1</sub></span> 。如果从 <span class="math inline"><em>t</em> = 0</span>的一个噪声样本开始，沿着这个向量场积分到 <span class="math inline"><em>t</em> = 1</span>，就能得到一个数据样本 <span class="math inline"><em>x</em><sub>1</sub> ≈ <em>p</em><sub>1</sub></span>。</p><p>由于无法得知整个分布的演化，观察一个特定的数据点 <span class="math inline"><em>x</em><sub>1</sub> ∼ <em>p</em><sub>1</sub></span>是如何从噪声演变来的。可以定义一个任意从噪声点 <span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>到这个特定数据点 <span class="math inline"><em>x</em><sub>1</sub></span>的路径。这个路径只依赖于选定的 <span class="math inline"><em>x</em><sub>0</sub>和<em>x</em><sub>1</sub></span>，记条件概率路径为 <span class="math inline"><em>p</em><sub><em>t</em></sub>(<em>x</em>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，定义了概率路径后就可以计算出对应的条件向量场<span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>。</p><p><em>eg:矫正流</em> 使用线性插值定义概率路径： <span class="math display"><em>x</em><sub><em>t</em></sub> = (1 − <em>t</em>) ⋅ <em>x</em><sub>0</sub> + <em>x</em><sub>1</sub> ⋅ <em>t</em></span>对时间求导：得到目标向量场： <span class="math display"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>) = <em>x</em><sub>1</sub> − <em>x</em><sub>0</sub></span>条件流匹配（CFM）的损失可以定义为： <span class="math display">ℒ<sub>CFM</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>(<strong>x</strong><sub><em>t</em></sub>, <em>t</em>) − <strong>u</strong><sub><em>t</em></sub>(<strong>x</strong><sub><em>t</em></sub>|<strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub>)||<sup>2</sup>]</span>其中，<span class="math inline">𝔼</span> 表示对时间 <span class="math inline"><em>t</em> ∼ <em>U</em>(0, 1)</span> ，噪声 <span class="math inline"><em>x</em><sub>0</sub> ∼ <em>p</em><sub>0</sub></span>和目标分布 <span class="math inline"><em>x</em><sub>1</sub> ∼ <em>p</em><sub>1</sub></span>进行采样求期望，实际计算形式为： <span class="math display">ℒ<sub>RectifiedFlow</sub>(<em>θ</em>) = 𝔼<sub><em>t</em>, <strong>x</strong><sub>0</sub>, <strong>x</strong><sub>1</sub></sub>[||<strong>v</strong><sub><em>θ</em></sub>((1 − <em>t</em>)<strong>x</strong><sub>0</sub> + <em>t</em><strong>x</strong><sub>1</sub>, <em>t</em>) − (<strong>x</strong><sub>1</sub> − <strong>x</strong><sub>0</sub>)||<sup>2</sup>]</span>数学上可以严格证明： <strong>最小化条件匹配流损失</strong> <span class="math inline">ℒ<sub>CFM</sub></span> 等价于最小化边缘匹配流损失<span class="math inline">ℒ<sub>marginal</sub></span> 故： <span class="math display">∇<sub><em>θ</em></sub>ℒ<sub>CFM</sub>(<em>θ</em>) = ∇<sub><em>θ</em></sub>ℒ<sub>marginal</sub>(<em>θ</em>)</span>通过让模型学习 <span class="math inline"><em>u</em><sub><em>t</em></sub>(<em>x</em><sub><em>t</em></sub>|<em>x</em><sub>0</sub>, <em>x</em><sub>1</sub>)</span>，即可得到目标向量场。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>生成式模型</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>生成式、深度学习、概率模型</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Diffusion</title>
     <link href="/2025/07/06/Diffusion/"/>
     <url>/2025/07/06/Diffusion/</url>

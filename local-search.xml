@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>图论的基础知识</title>
+    <link href="/2025/07/17/GNN/"/>
+    <url>/2025/07/17/GNN/</url>
+    
+    <content type="html"><![CDATA[<h3 id="基本概念">基本概念</h3><p>使用 <span class="math inline"><em>G</em> = {<em>V</em>, <em>E</em> }</span>表示图，其边 <span class="math inline"><em>e</em> = (<em>v</em><sub>1</sub>, <em>v</em><sub>2</sub>)</span>有两个终点 <span class="math inline"><em>v</em><sub>1</sub>, <em>v</em><sub>2</sub></span>，称节点<span class="math inline"><em>v</em><sub>1</sub>, <em>v</em><sub>2</sub></span>相邻，一条边可能有向也可能无向，图网络中所有的边都有向则称之为有向图，网络中所有的边都无向，称之为无向图<span class="math display"><em>G</em> = {<em>V</em>, <em>E</em> }</span><span class="math inline"><em>V</em></span>：节点集合，<span class="math inline"><em>V</em> = {<em>v</em><sub>1</sub>, <em>v</em><sub>2</sub>, ⋯, <em>v</em><sub><em>n</em></sub>}</span><span class="math inline"><em>E</em></span>：边集合，<span class="math inline"><em>E</em> = {<em>e</em><sub>1</sub>, <em>e</em><sub>2</sub>, ⋯, <em>e</em><sub><em>n</em></sub>}</span>节点的度记作 <span class="math inline"><em>d</em>(<em>v</em>)</span>，表示与节点相连接的边的个数 ### 图的代数表述 *<strong>邻接矩阵</strong>：反应节点与节点之间的连接关系，对于具有 <span class="math inline"><em>m</em></span> 条边和 <span class="math inline"><em>n</em></span> 个节点的图，定义邻接矩阵 <span class="math inline"><em>A</em><sub><em>i</em><em>j</em></sub> ∈ ℝ<sup><em>n</em> × <em>n</em></sup></span><span class="math display">$$A_{ij} = \begin{cases}1 &amp; \text{if } (v_i, v_j) \in E\ and\ i \neq j \\0 &amp; \text{else}\end{cases}$$</span> 当图是一个无向图时是一个对称矩阵 <img src="/2025/07/17/GNN/am.png" class title="邻接矩阵"> *度矩阵：度矩阵是一个对角矩阵 <span class="math display"><em>D̂</em><sub><em>i</em><em>i</em></sub> = ∑<sub><em>j</em></sub><em>Â</em><sub><em>i</em><em>j</em></sub></span></p><ul><li>拉普拉斯矩阵： <strong><span class="math display"><strong>L</strong> <strong>=</strong> <strong>D</strong> <strong>−</strong> <strong>A</strong></span></strong>对于拉普拉斯矩阵的各个元素，定义如下： <span class="math display">$$  L_{ij}= \begin{cases}d(v_{i}) &amp; i=j \\-1 &amp; (v_{i},v_{j})\in E \,且\,i \neq j) \\0 &amp; else\end{cases}$$</span></li><li>归一化拉普拉斯矩阵： <span class="math display">$$L_{sym}=D^{-\frac{1}{2}}LD^{-\frac{1}{2}}=I-D^{-\frac{1}{2}}AD^{-\frac{1}{2}}$$</span></li><li>正则化拉普拉斯矩阵：引入自环和平滑系数 <span class="math inline"><em>λ</em></span> 来稳定数值计算，常见形式为： <span class="math display"><em>L̃</em> = <em>I</em> + <em>λ</em><em>L</em></span>对邻接矩阵和度矩阵进行正则化（考虑自环）： <span class="math display"><em>Ã</em> = <em>A</em> + <em>I</em>   <em>D̃</em> = ∑<sub><em>j</em></sub><em>Ã</em><sub><em>i</em><em>j</em></sub> = ∑<sub><em>j</em></sub>(<em>A</em><sub><em>i</em><em>j</em></sub> + <em>I</em><sub><em>i</em><em>j</em></sub>) = <em>D</em> + <em>I</em></span></li><li>归一化正则拉普拉斯矩阵： <span class="math display">$$\tilde{L}_\mathrm{sym}=I-\tilde{D}^{-\frac{1}{2}}\tilde{A}\tilde{D}^{-\frac{1}{2}}$$</span></li><li><strong>关联矩阵</strong>：这是另外一种表示图的矩阵，反应节点与边的从属关系，对于具有<span class="math inline"><em>m</em></span> 条边和 <span class="math inline"><em>n</em></span> 个节点的图，定义关联矩阵 <span class="math inline"><em>M</em> ∈ ℝ<sup><em>m</em> × <em>n</em></sup></span><span class="math display">$$M_{ij}=\begin{cases}1 &amp; \exists k\: s.t \: e_{j}= (v_{i},v_{i})\\0 &amp; else\end{cases}$$</span></li></ul><img src="/2025/07/17/GNN/im.png" class title="关联矩阵"><p>邻接矩阵定义了节点与节点之间的连接关系，矩阵的行和列都代表节点，若节点之间相连接则数值为1，否则为0；而关联矩阵定义了节点和边的从属关系，矩阵的行列分别代表节点与边，若节点属于边则数值为1，否则为0。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>图神经网络</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>图神经网络</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>flow matching</title>
     <link href="/2025/07/07/flow-matching/"/>
     <url>/2025/07/07/flow-matching/</url>

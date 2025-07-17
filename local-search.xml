@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>GCN</title>
+    <link href="/2025/07/17/GCN/"/>
+    <url>/2025/07/17/GCN/</url>
+    
+    <content type="html"><![CDATA[<p>图卷积将卷积运算扩展到图结构上，主要可以分为基于谱分解的方法和基于空间结构的方法，其核心是需要通过一个映射<span class="math inline"><em>f</em>(⋅)</span> 实现对自身特征 <span class="math inline"><em>v</em><sub><em>i</em></sub></span>和周边节点特征 <span class="math inline"><em>v</em><sub><em>j</em></sub></span>聚合生成新的节点表示 <span class="math inline"><em>h</em></span> ，GCN是诸多图模型的基础。</p><h3 id="基于谱分解的卷积">基于谱分解的卷积</h3><p>谱分解的核心思想是<strong>将图的拓扑结构映射到谱域（频域）进行滤波</strong>，再逆变换回空域。在基于普分解的图神经网络中，图被定义为无向图，使用拉普拉斯矩阵来表示图<span class="math display">$$L_{sym}=D^{-\frac{1}{2}}LD^{-\frac{1}{2}}=I-D^{-\frac{1}{2}}AD^{-\frac{1}{2}}$$</span> 拉普拉斯矩阵式实对称半正定矩阵，可以进行谱分解： <span class="math display"><em>L</em> = <em>U</em><em>Λ</em><em>U</em><sup><em>T</em></sup></span>* <span class="math inline"><em>U</em></span> 是特征向量 * <span class="math inline"><em>Λ</em></span> 是特征值对角矩阵，代表图的频率分量基于谱分解的方法由于无法进行mini batch的训练，因此使用较少，现代主流方法基本都是基于空域的方法</p><h3 id="基于空域的卷积">基于空域的卷积</h3><p><strong>​</strong>​直接在图的节点邻域上定义卷积操作，通过​<strong>​消息传递​</strong>​和​<strong>​邻居聚合​</strong>​更新节点表示。与谱域方法不同，空域方法不依赖图的傅里叶变换，而是通过局部拓扑结构直接操作，具有更强的灵活性和可扩展性。核心思想包括三部分：* 消息生成：根据当前节点和邻居节点的特征生成信息 *聚合：聚合邻居信息（均值、求和、最大值等） *更新：结合自身特征和聚合结果生成新表示 <span class="math display">$$\mathbf{H^{(l+1)}=\sigma\left(\underbrace{\tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}}_{\text{归一化邻接矩阵}}\underbrace{H^{(l)}W^{(l)}}_{\text{深度网络}}\right)}$$</span> 这种聚合方式同时考虑了节点自身和邻居节点的度，<span class="math inline"><em>D̃</em><sup>−1/2</sup><em>Ã</em><em>D̃</em><sup>−1/2</sup></span>是归一化邻接矩阵，防止高阶节点对低阶节点的信息淹没，即<strong>表示聚合时邻居节点的权重</strong>。<span class="math display"><em>Ã</em> = <em>A</em> + <em>I</em>   <em>Â</em> = <em>D̃</em><sup>−1/2</sup><em>Ã</em><em>D̃</em><sup>−1/2</sup></span>对于矩阵中的某个值： <span class="math display">$$\hat{A}_{ij}=\begin{cases}\frac{1}{\sqrt{d_id_j}},&amp;\text{if}(i,j)\in\tilde{A}\\0,&amp;\text{else}&amp;\end{cases}$$</span><span class="math inline">if(<em>i</em>, <em>j</em>) ∈ <em>Ã</em></span>表示 <span class="math inline"><em>i</em>和<em>j</em></span>是邻居节点，可以看出，如果节点的度越大，则聚合时的权重就越小，</p><img src="/2025/07/17/GCN/1.png" class title="信息聚合"><p>GCN的两个缺点： * GCN需要将整个图放到内存中，对于显存和内存的需求较大* GCN训练时需要指导整个图的结构信息 ### GraphSAGE图数据中的每一个节点都可以通过边的关系利用其他节点的信息，GraphSAGE与GCN最大的不同在于GCN是直推式方法<strong>(Transductive Learning)</strong>，而GraphSAGE是归纳式学习方法<strong>(Inductive Learning)</strong></p><ul><li>Transductive（直推式）：传统的图嵌入算法（基于矩阵分解、随机游走的算法）在迭代的过程中需要用到所有节点的信息，学习得到所有节点的向量表示，但是对于新加入的节点需要对所有的节点重新计算，泛化性差。</li><li>inductive（归纳式）：学习的结果不再是每个节点的嵌入，而是“<strong>聚合函数</strong>”。根据已知各个节点的特征和邻居关系，得到一个新节点的表示。因此，graphSAGE泛化性好，对新加入的节点，可以根据其邻居聚合直接给出其表示学习，而不必对整个网络重新迭代。GraphSAGE相对于GCN提出了两个关键改进：</li><li><strong>固定数量邻居采样</strong>（NeighborSampling）：每个节点只从邻居中采样一部分节点进行聚合，降低计算复杂度。</li><li><strong>灵活聚合函数（AggregatorFunction）</strong>：使用如均值（mean）、池化（pooling）、LSTM等方式对邻居特征进行聚合，增强表达能力。</li></ul><p>对于每一个节点 <span class="math inline"><em>v</em></span> ，特征向量<span class="math inline"><em>h</em><sup>(<em>l</em>)</sup></span> 在第<span class="math inline"><em>l</em></span> 层的更新为：</p><p><span class="math display"><strong>h</strong><sub><em>v</em></sub><sup>(<em>l</em>)</sup> = <em>σ</em>(<em>W</em><sup>(<em>l</em>)</sup> ⋅ AGGREGATE<sup>(<em>l</em>)</sup>({<strong>h</strong><sub><em>v</em></sub><sup>(<em>l</em> − 1)</sup>} ∪ {<strong>h</strong><sub><em>u</em></sub><sup>(<em>l</em> − 1)</sup>, <em>u</em> ∈ 𝒩(<em>v</em>)}))</span></p><p>其中，<span class="math inline"><em>u</em> ∈ 𝒩(<em>v</em>)</span>表示节点 <span class="math inline"><em>v</em></span> 的邻居集合，<span class="math inline"><em>A</em><em>G</em><em>G</em><em>R</em><em>E</em><em>G</em><em>A</em><em>T</em><em>E</em><sup>(<em>l</em>)</sup></span>代表聚合函数，常用的聚合函数有 <span class="math inline"><em>m</em><em>e</em><em>a</em><em>n</em></span><span class="math inline"><em>L</em><em>S</em><em>T</em><em>M</em></span>、<span class="math inline"><em>m</em><em>a</em><em>x</em> − <em>p</em><em>o</em><em>o</em><em>l</em><em>i</em><em>n</em><em>g</em></span>等</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>图神经网络</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>图神经网络</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>图论的基础知识</title>
     <link href="/2025/07/17/GNN/"/>
     <url>/2025/07/17/GNN/</url>
